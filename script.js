@@ -34,6 +34,45 @@ let detectionTimer = null;
 let wasMoving = false;
 let lastEventTime = 0;
 
+// RECORDING DISPLAY
+
+const cameraBox = document.getElementById("cameraBox");
+const recBadge = document.getElementById("recBadge");
+const recordingTimer = document.getElementById("recordingTimer");
+
+let recordingInterval = null;
+let recordingSeconds = 0;
+
+function updateRecordingTimer() {
+    const hours = String(Math.floor(recordingSeconds / 3600)).padStart(2, "0");
+    const minutes = String(Math.floor((recordingSeconds % 3600) / 60)).padStart(2, "0");
+    const seconds = String(recordingSeconds % 60).padStart(2, "0");
+
+    recordingTimer.textContent = `${hours}:${minutes}:${seconds}`;
+    recordingSeconds++;
+}
+
+function startRecordingDisplay() {
+    recordingSeconds = 0;
+    updateRecordingTimer();
+
+    clearInterval(recordingInterval);
+    recordingInterval = setInterval(updateRecordingTimer, 1000);
+
+    cameraBox.classList.add("is-active");
+    recBadge.classList.add("active");
+}
+
+function stopRecordingDisplay() {
+    clearInterval(recordingInterval);
+    recordingInterval = null;
+
+    cameraBox.classList.remove("is-active");
+    recBadge.classList.remove("active");
+
+    recordingSeconds = 0;
+    recordingTimer.textContent = "00:00:00";
+}
 
 // SAMPLE CANVAS
 const sampleCanvas = document.createElement("canvas");
@@ -117,6 +156,7 @@ async function startCamera() {
 
         statusText.textContent = "Monitoring Active";
         statusText.style.color = "#22c55e";
+        startRecordingDisplay();
 
         detectionTimer = setInterval(detectMotion, 150);
 
@@ -335,6 +375,7 @@ function stopCamera() {
     previousFrame = null;
     wasMoving = false;
 
+    stopRecordingDisplay();
     statusText.textContent = "System Ready";
     statusText.style.color = "#22c55e";
 
