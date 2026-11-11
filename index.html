@@ -1,0 +1,60 @@
+<!DOCTYPE <!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>MotionAI</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>MotionAI</h1>
+
+        <p>Intelligent Motion Detection System</p>
+
+        <div class="camera-box">
+
+            <video id="camera" autoplay playsinline></video>
+
+            <canvas id="motionCanvas"></canvas>
+
+        </div>
+
+        <h2 id="status">System Ready</h2>
+      <div class="sensitivity-box">
+
+    <h3>Motion Sensitivity</h3>
+
+    <input
+        type="range"
+        id="sensitivity"
+        min="1"
+        max="10"
+        value="5"
+    >
+
+    <p>
+        Sensitivity:
+        <span id="sensitivityValue">5</span>
+    </p>
+
+      </div>
+
+        <button id="startBtn">Start Detection</button>
+
+        <button id="stopBtn">Stop Detection</button>
+
+        <p>Motion Events: <span id="counter">0</span></p>
+
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>￼Enter
