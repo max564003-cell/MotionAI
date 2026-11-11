@@ -1,11 +1,11 @@
-<!DOCTYPE <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>MotionAI</title>
+    <title>MotionAI - Intelligent Motion Detection</title>
 
     <link rel="stylesheet" href="style.css">
 </head>
@@ -18,43 +18,64 @@
 
         <p>Intelligent Motion Detection System</p>
 
+        <!-- CAMERA SECTION -->
         <div class="camera-box">
 
-            <video id="camera" autoplay playsinline></video>
+            <video
+                id="camera"
+                autoplay
+                playsinline
+                muted>
+            </video>
 
             <canvas id="motionCanvas"></canvas>
 
         </div>
 
-        <h2 id="status">System Ready</h2>
-      <div class="sensitivity-box">
+        <!-- STATUS -->
+        <h2 id="status" aria-live="polite">
+            System Ready
+        </h2>
 
-    <h3>Motion Sensitivity</h3>
+        <!-- SENSITIVITY CONTROL -->
+        <div class="sensitivity-box">
 
-    <input
-        type="range"
-        id="sensitivity"
-        min="1"
-        max="10"
-        value="5"
-    >
+            <h3>Motion Sensitivity</h3>
 
-    <p>
-        Sensitivity:
-        <span id="sensitivityValue">5</span>
-    </p>
+            <input
+                type="range"
+                id="sensitivity"
+                min="1"
+                max="10"
+                value="5"
+                aria-label="Motion Sensitivity">
 
-      </div>
+            <p>
+                Sensitivity:
+                <span id="sensitivityValue">5</span>
+            </p>
 
-        <button id="startBtn">Start Detection</button>
+        </div>
 
-        <button id="stopBtn">Stop Detection</button>
+        <!-- CAMERA CONTROLS -->
+        <button type="button" id="startBtn">
+            Start Detection
+        </button>
 
-        <p>Motion Events: <span id="counter">0</span></p>
+        <button type="button" id="stopBtn">
+            Stop Detection
+        </button>
+
+        <!-- MOTION COUNTER -->
+        <p>
+            Motion Events:
+            <span id="counter">0</span>
+        </p>
 
     </div>
 
     <script src="script.js"></script>
 
 </body>
-</html>￼Enter
+
+        </html>
