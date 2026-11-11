@@ -1,5 +1,6 @@
-// MOTIONAI - Motion Detection System
+// MOTIONAI - Intelligent Motion Detection System
 
+// HTML ELEMENTS
 const video = document.getElementById("camera");
 const canvas = document.getElementById("motionCanvas");
 const ctx = canvas.getContext("2d");
@@ -8,7 +9,6 @@ const startBtn = document.getElementById("startBtn");
 const stopBtn = document.getElementById("stopBtn");
 const statusText = document.getElementById("status");
 const counter = document.getElementById("counter");
-// Sensitivity Controls
 
 const sensitivitySlider =
     document.getElementById("sensitivity");
@@ -16,18 +16,17 @@ const sensitivitySlider =
 const sensitivityValue =
     document.getElementById("sensitivityValue");
 
+
+// SENSITIVITY CONTROL
 let sensitivity = 5;
 
-sensitivitySlider.addEventListener("input", function() {
-
+sensitivitySlider.addEventListener("input", function () {
     sensitivity = Number(this.value);
-
     sensitivityValue.textContent = sensitivity;
-
-    console.log("Sensitivity:", sensitivity);
-
 });
 
+
+// SYSTEM VARIABLES
 let cameraStream = null;
 let previousFrame = null;
 let motionEvents = 0;
@@ -35,7 +34,10 @@ let detectionTimer = null;
 let wasMoving = false;
 let lastEventTime = 0;
 
+
+// SAMPLE CANVAS
 const sampleCanvas = document.createElement("canvas");
+
 sampleCanvas.width = 160;
 sampleCanvas.height = 120;
 
@@ -44,22 +46,68 @@ const sampleCtx = sampleCanvas.getContext("2d", {
 });
 
 
-// START CAMERA
+// WAIT FOR VIDEO READY
+function waitForVideo() {
 
+    return new Promise((resolve, reject) => {
+
+        if (video.videoWidth > 0 && video.videoHeight > 0) {
+            resolve();
+            return;
+        }
+
+        video.onloadedmetadata = () => {
+            resolve();
+        };
+
+        video.onerror = () => {
+            reject(new Error("Camera video could not load."));
+        };
+
+    });
+}
+
+
+// START CAMERA
 async function startCamera() {
+
+    if (cameraStream) return;
 
     try {
 
-        statusText.textContent = "Connecting Camera...";
+        if (!navigator.mediaDevices ||
+            !navigator.mediaDevices.getUserMedia) {
+
+            throw new Error(
+                "Camera API unavailable. Open MotionAI using HTTPS in a supported browser."
+            );
+
+        }
+
+        statusText.textContent = "Requesting Camera Permission...";
+        statusText.style.color = "#38bdf8";
+
+        startBtn.disabled = true;
 
         cameraStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: "environment" },
+
+            video: {
+                facingMode: {
+                    ideal: "environment"
+                }
+            },
+
             audio: false
+
         });
 
         video.srcObject = cameraStream;
+        video.muted = true;
+        video.playsInline = true;
 
         await video.play();
+
+        await waitForVideo();
 
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
@@ -68,49 +116,81 @@ async function startCamera() {
         wasMoving = false;
 
         statusText.textContent = "Monitoring Active";
-
-        startBtn.disabled = true;
+        statusText.style.color = "#22c55e";
 
         detectionTimer = setInterval(detectMotion, 150);
 
-    } catch (error) {
+    }
 
-        console.error(error);
+    catch (error) {
 
-        statusText.textContent = "Camera Error";
+        console.error("MotionAI Camera Error:", error);
+
+        stopCamera();
+
+        if (error.name === "NotAllowedError") {
+
+            statusText.textContent =
+                "Camera Permission Denied";
+
+        } else if (error.name === "NotFoundError") {
+
+            statusText.textContent =
+                "No Camera Found";
+
+        } else if (error.name === "NotReadableError") {
+
+            statusText.textContent =
+                "Camera Is Busy";
+
+        } else {
+
+            statusText.textContent =
+                "Camera Error: " + error.message;
+
+        }
+
+        statusText.style.color = "#ef4444";
 
     }
+
 }
 
 
 // MOTION DETECTION
-
 function detectMotion() {
 
-    if (!video.videoWidth) return;
+    if (!video.videoWidth || !video.videoHeight) {
+        return;
+    }
 
     sampleCtx.drawImage(
         video,
-        0, 0,
+        0,
+        0,
         sampleCanvas.width,
         sampleCanvas.height
     );
 
     const currentFrame = sampleCtx.getImageData(
-        0, 0,
+        0,
+        0,
         sampleCanvas.width,
         sampleCanvas.height
     );
 
     if (previousFrame === null) {
+
         previousFrame = currentFrame;
         return;
+
     }
 
     let changedPixels = 0;
 
     let minX = 160;
     let minY = 120;
+
     let maxX = 0;
     let maxY = 0;
 
@@ -121,15 +201,18 @@ function detectMotion() {
             const i = (y * 160 + x) * 4;
 
             const r = Math.abs(
-                currentFrame.data[i] - previousFrame.data[i]
+                currentFrame.data[i] -
+                previousFrame.data[i]
             );
 
             const g = Math.abs(
-                currentFrame.data[i + 1] - previousFrame.data[i + 1]
+                currentFrame.data[i + 1] -
+                previousFrame.data[i + 1]
             );
 
             const b = Math.abs(
-                currentFrame.data[i + 2] - previousFrame.data[i + 2]
+                currentFrame.data[i + 2] -
+                previousFrame.data[i + 2]
             );
 
             const difference = (r + g + b) / 3;
@@ -145,19 +228,31 @@ function detectMotion() {
                 maxY = Math.max(maxY, y);
 
             }
+
         }
+
     }
 
     const motionPercentage =
         (changedPixels / (160 * 120)) * 100;
 
-    // Dynamic Motion Threshold
 
-const threshold = 6 - (sensitivity - 1) * 0.5;
+    // SENSITIVITY THRESHOLD
+    const threshold =
+        6 - (sensitivity - 1) * 0.5;
 
-const isMoving = motionPercentage > threshold;
+    const isMoving =
+        motionPercentage > threshold;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // CLEAR OLD DETECTION BOX
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
 
     if (isMoving) {
 
@@ -177,6 +272,8 @@ const isMoving = motionPercentage > threshold;
             (maxY - minY) * scaleY
         );
 
+
+        // MOTION EVENT COUNTER
         const now = Date.now();
 
         if (!wasMoving && now - lastEventTime > 1000) {
@@ -186,6 +283,7 @@ const isMoving = motionPercentage > threshold;
             counter.textContent = motionEvents;
 
             lastEventTime = now;
+
         }
 
     } else {
@@ -195,19 +293,23 @@ const isMoving = motionPercentage > threshold;
 
     }
 
+
     wasMoving = isMoving;
 
     previousFrame = currentFrame;
+
 }
 
 
 // STOP CAMERA
-
 function stopCamera() {
 
-    if (detectionTimer) {
+    if (detectionTimer !== null) {
+
         clearInterval(detectionTimer);
+
         detectionTimer = null;
+
     }
 
     if (cameraStream) {
@@ -217,23 +319,37 @@ function stopCamera() {
         });
 
         cameraStream = null;
+
     }
 
+    video.pause();
     video.srcObject = null;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
 
     previousFrame = null;
+    wasMoving = false;
 
     statusText.textContent = "System Ready";
     statusText.style.color = "#22c55e";
 
     startBtn.disabled = false;
+
 }
 
 
 // BUTTON EVENTS
-
 startBtn.addEventListener("click", startCamera);
 
-stopBtn.addEventListener("click", stopCamera);￼Enter
+stopBtn.addEventListener("click", stopCamera);
+
+
+// INITIAL STATE
+stopBtn.disabled = false;
+
+console.log("MotionAI initialized successfully.");
